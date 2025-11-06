@@ -37,7 +37,7 @@ const IconSettings: React.FC<{ className?: string }> = ({ className = "w-6 h-6" 
 );
 
 // --- Sidebar Component (Inlined) ---
-function Sidebar() {
+function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const navItems = [
     { name: "Dashboard", icon: <IconLayoutDashboard />, href: "/dashboard" },
     { name: "Transcribe", icon: <IconFileText />, href: "/transcribe" },
@@ -71,65 +71,85 @@ function Sidebar() {
   const activePath = "/settings"; 
 
   return (
-    <nav className="w-64 bg-black border-r border-gray-800 flex flex-col fixed h-full">
-      {/* Logo/Header */}
-      <div className="flex items-center justify-center h-20 border-b border-gray-800">
-        <h1 className="text-2xl font-bold text-cyan-400">MediScript</h1>
-      </div>
+    <>
+      <div
+        className={`fixed inset-0 bg-black/50 z-40 md:hidden ${isOpen ? "block" : "hidden"}`}
+        onClick={onClose}
+        aria-hidden={!isOpen}
+      />
+      <nav
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-black border-r border-gray-800 flex flex-col h-full transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "-translate-x-64"} md:translate-x-0`}
+      >
+        {/* Logo/Header */}
+        <div className="flex items-center justify-center h-20 border-b border-gray-800 relative">
+          <h1 className="text-2xl font-bold text-cyan-400">MediScript</h1>
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute right-3 top-1/2 -translate-y-1/2 md:hidden p-2 rounded hover:bg-gray-800 text-gray-300"
+            aria-label="Close sidebar"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
 
-      {/* Navigation Links */}
-      <div className="flex-1 p-4 space-y-2">
-        {navItems.map((item) => {
-          const isActive = activePath === item.href;
-          return (
-            <a // Changed from <Link> to <a>
-              key={item.name}
-              href={item.href} // Standard href
-              className={`group flex items-center w-full px-4 py-3 rounded-lg transition-colors duration-200 ${
-                isActive
-                  ? "bg-gray-900 text-white" // Active state
-                  : "text-gray-400 hover:bg-gray-900 hover:text-white" // Inactive state
-              }`}
-            >
-              <span
-                className={`mr-3 transition-colors ${
+        {/* Navigation Links */}
+        <div className="flex-1 p-4 space-y-2">
+          {navItems.map((item) => {
+            const isActive = activePath === item.href;
+            return (
+              <a // Changed from <Link> to <a>
+                key={item.name}
+                href={item.href} // Standard href
+                className={`group flex items-center w-full px-4 py-3 rounded-lg transition-colors duration-200 ${
                   isActive
-                    ? "text-cyan-400" // Active icon color
-                    : "text-gray-500 group-hover:text-gray-300" // Inactive icon color
+                    ? "bg-gray-900 text-white" // Active state
+                    : "text-gray-400 hover:bg-gray-900 hover:text-white" // Inactive state
                 }`}
               >
-                {React.cloneElement(item.icon, { className: "w-5 h-5" })}
-              </span>
-              <span className="font-medium text-sm">{item.name}</span>
-            </a>
-          );
-        })}
-      </div>
+                <span
+                  className={`mr-3 transition-colors ${
+                    isActive
+                      ? "text-cyan-400" // Active icon color
+                      : "text-gray-500 group-hover:text-gray-300" // Inactive icon color
+                  }`}
+                >
+                  {React.cloneElement(item.icon, { className: "w-5 h-5" })}
+                </span>
+                <span className="font-medium text-sm">{item.name}</span>
+              </a>
+            );
+          })}
+        </div>
 
-      {/* Profile Section */}
-      <div className="p-4 border-t border-gray-800">
-        <a // Changed from <Link> to <a>
-          href="/profile"
-          className="flex items-center hover:bg-gray-900 p-2 rounded-lg transition-colors"
-        >
-          {avatarUrl ? (
-            <img // Changed from <Image> to <img>
-              src={avatarUrl}
-              alt="Avatar"
-              className="w-10 h-10 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center font-semibold text-white text-lg">
-              {(name || "U").slice(0, 2).toUpperCase()}
+        {/* Profile Section */}
+        <div className="p-4 border-t border-gray-800">
+          <a // Changed from <Link> to <a>
+            href="/profile"
+            className="flex items-center hover:bg-gray-900 p-2 rounded-lg transition-colors"
+          >
+            {avatarUrl ? (
+              <img // Changed from <Image> to <img>
+                src={avatarUrl}
+                alt="Avatar"
+                className="w-10 h-10 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center font-semibold text-white text-lg">
+                {(name || "U").slice(0, 2).toUpperCase()}
+              </div>
+            )}
+            <div className="ml-3">
+              <p className="text-sm font-medium text-white">{name}</p>
+              <p className="text-xs text-gray-400">{role}</p>
             </div>
-          )}
-          <div className="ml-3">
-            <p className="text-sm font-medium text-white">{name}</p>
-            <p className="text-xs text-gray-400">{role}</p>
-          </div>
-        </a>
-      </div>
-    </nav>
+          </a>
+        </div>
+      </nav>
+    </>
   );
 }
 // --- End Sidebar ---
@@ -210,6 +230,7 @@ export default function Page() {
   });
   const [notificationPermission, setNotificationPermission] = useState("default");
   const audioPlayer = useRef<HTMLAudioElement | null>(null);
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   // Check notification permission on load
   useEffect(() => {
@@ -323,8 +344,25 @@ export default function Page() {
 
   return (
     <div className="min-h-screen w-full flex bg-black text-gray-100">
-      <Sidebar />
-      <main className="flex-1 ml-64 p-8 space-y-8">
+      {/* Mobile header */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-black border-b border-gray-800 flex items-center justify-between px-4 h-14">
+        <button
+          type="button"
+          onClick={() => setSidebarOpen(true)}
+          className="p-2 rounded hover:bg-gray-800 text-gray-200"
+          aria-label="Open sidebar"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <span className="font-semibold text-white">Settings</span>
+        <span className="w-10" />
+      </div>
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <main className="flex-1 md:ml-64 p-4 pt-20 md:p-8 space-y-8">
         <h1 className="text-3xl font-bold text-emerald-400">Settings</h1>
 
         {/* Theme Section */}

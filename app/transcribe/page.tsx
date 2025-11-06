@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Sidebar from "../../components/Sidebar"; // Assuming correct path
 
-// Icon components (unchanged, but their colors will adapt via currentColor)
+// Icon components (unchanged)
 const IconMicrophone = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
@@ -61,6 +61,17 @@ export default function Page() {
   const [doctorEmail, setDoctorEmail] = useState<string>("");
   const [doctorPhone, setDoctorPhone] = useState<string>("");
   const [doctorAddress, setDoctorAddress] = useState<string>("");
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
+
+  // Define strict types for backend medical entities
+  type OtherEntity = { word: string; type: string; confidence?: number };
+  interface MedicalEntities {
+    diseases?: string[];
+    medications?: string[];
+    symptoms?: string[];
+    procedures?: string[];
+    other?: OtherEntity[];
+  }
 
   useEffect(() => {
     return () => {
@@ -219,43 +230,6 @@ export default function Page() {
     URL.revokeObjectURL(url);
   };
 
-  const buildPrescriptionHTML = () => {
-    // Proxy to the typed, state-driven prescription builder
-    return buildPrescriptionHtml();
-  };
-
-
-
-  const handlePrint = () => {
-    if (!text) return;
-    const w = window.open("", "_blank");
-    if (!w) return;
-    w.document.write(`<!doctype html><html><head>
-      <meta charset="utf-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <link rel="preconnect" href="https://fonts.googleapis.com">
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-      <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-      <style>
-        body { font-family: "Roboto", sans-serif; background-color: #1a202c; color: #e2e8f0; }
-        pre { white-space: pre-wrap; }
-      </style>
-    </head><body>
-      <pre>${text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
-    </body></html>`);
-    w.document.close();
-    w.print();
-    w.close();
-  };
-  // Define strict types for backend medical entities
-  type OtherEntity = { word: string; type: string; confidence?: number };
-  interface MedicalEntities {
-    diseases?: string[];
-    medications?: string[];
-    symptoms?: string[];
-    procedures?: string[];
-    other?: OtherEntity[];
-  }
   const buildPrescriptionHtml = () => {
     const safeText = (text || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const meds: string[] = entities?.medications || [];
@@ -315,6 +289,29 @@ export default function Page() {
       <div class="foot">This document is based solely on the provided audio transcription and extracted entities.</div>
     </body></html>`;
   };
+
+  const handlePrint = () => {
+    if (!text) return;
+    const w = window.open("", "_blank");
+    if (!w) return;
+    w.document.write(`<!doctype html><html><head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+      <style>
+        body { font-family: "Roboto", sans-serif; background-color: #1a202c; color: #e2e8f0; }
+        pre { white-space: pre-wrap; }
+      </style>
+    </head><body>
+      <pre>${text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
+    </body></html>`);
+    w.document.close();
+    w.print();
+    w.close();
+  };
+  
   const handlePrintPrescription = () => {
     if (!text) return;
     const html = buildPrescriptionHtml();
@@ -340,9 +337,26 @@ export default function Page() {
   };
 
   return (
-    <div className="min-h-screen w-full flex bg-black text-gray-100"> {/* Darker background, light text */}
-      <Sidebar />
-      <main className="flex-1 ml-64 p-8 max-w-4xl mx-auto" aria-busy={processing}>
+    <div className="min-h-screen w-full flex bg-black text-gray-100">
+      {/* Mobile header */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-black border-b border-gray-800 flex items-center justify-between px-4 h-14">
+        <button
+          type="button"
+          onClick={() => setSidebarOpen(true)}
+          className="p-2 rounded hover:bg-gray-800 text-gray-200"
+          aria-label="Open sidebar"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <span className="font-semibold text-white">Transcribe</span>
+        <span className="w-10" />
+      </div>
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <main className="flex-1 md:ml-64 p-4 pt-20 md:p-8 max-w-4xl mx-auto" aria-busy={processing}>
         <h1 className="text-3xl font-bold mb-6 text-emerald-400">New Transcription</h1> {/* Green accent */}
         {error && <div className="mb-4 text-red-500 bg-red-900/20 p-3 rounded">{error}</div>} {/* Error styling */}
         {processing && <div className="mb-4 text-emerald-400 bg-emerald-900/20 p-3 rounded">Processing...</div>} {/* Processing styling */}
@@ -404,7 +418,7 @@ export default function Page() {
           <div className="bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-700 mb-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-semibold text-lg text-gray-200">Word • Type • Confidence</h3>
-              <button onClick={handlePrintPrescription} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 bg-gray-700 hover:bg-gray-600 text-gray-200">
+              <button onClick={handlePrintPrescription} className="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 bg-gray-700 hover:bg-gray-600 text-gray-200">
                 <IconPrinter className="w-4 h-4" /> Print Prescription
               </button>
             </div>
@@ -433,7 +447,7 @@ export default function Page() {
 
         {/* Prescription Preview */}
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-700 mb-6">
-          <div className="flex justify-between items-start mb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
             <div>
               <h3 className="font-semibold text-lg text-emerald-400">Prescription</h3>
               <div className="mt-1 text-sm text-gray-300">
@@ -444,7 +458,7 @@ export default function Page() {
               </div>
             </div>
             <div>
-              <button onClick={handlePrintPrescription} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 bg-gray-700 hover:bg-gray-600 text-gray-200">
+              <button onClick={handlePrintPrescription} className="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 bg-gray-700 hover:bg-gray-600 text-gray-200">
                 <IconPrinter className="w-4 h-4" /> Print Prescription
               </button>
             </div>
@@ -479,9 +493,11 @@ export default function Page() {
 
         {/* Transcript Editor */}
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-700">
-          <div className="flex justify-between items-center mb-4">
+          {/* --- MODIFIED FOR RESPONSIVENESS --- */}
+          <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-4">
             <h3 className="font-semibold text-lg text-gray-200">Transcript Editor</h3>
-            <div className="flex gap-3">
+            {/* This button group now wraps and aligns left on mobile, right on desktop */}
+            <div className="flex flex-wrap gap-3 justify-start md:justify-end">
               <button
                 onClick={handleDownload}
                 disabled={!text || processing}
@@ -517,6 +533,8 @@ export default function Page() {
               </button>
             </div>
           </div>
+          {/* --- END OF MODIFICATION --- */}
+          
           {/* NEW: Entities summary shown before text */}
           <div className="space-y-3 mb-4">
             {languageCode && (

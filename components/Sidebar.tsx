@@ -50,7 +50,7 @@ function IconSettings({ className = "w-6 h-6" }: { className?: string }) {
   );
 }
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const pathname = usePathname();
 
   const navItems = [
@@ -93,36 +93,61 @@ export default function Sidebar() {
   });
 
   return (
-    <nav className="w-64 bg-black border-r border-gray-800 flex flex-col fixed h-full">
-      <div className="flex items-center justify-center h-20 border-b border-gray-800">
-        <h1 className="text-2xl font-bold text-emerald-400">MediScript</h1>
-      </div>
-      <div className="flex-1 p-4 space-y-2">
-        {navItems.map((item) => {
-          const isActive = pathname.startsWith(item.href);
-          return (
-            <a key={item.name} href={item.href} className={`group flex items-center w-full px-4 py-3 rounded-lg transition-colors duration-200 ${isActive ? "bg-gray-900 text-white" : "text-gray-400 hover:bg-gray-900 hover:text-white"}`}>
-              <span className={`mr-3 transition-colors ${isActive ? "text-emerald-400" : "text-gray-500 group-hover:text-gray-300"}`}>{React.cloneElement(item.icon, { className: "w-5 h-5" })}</span>
-              <span className="font-medium text-sm">{item.name}</span>
-            </a>
-          );
-        })}
-      </div>
-      <div className="p-4 border-t border-gray-800">
-        <a href="/profile" className="flex items-center hover:bg-gray-900 p-2 rounded-lg transition-colors">
-          {avatarUrl ? (
-            <Image src={avatarUrl} alt="Avatar" width={40} height={40} className="w-10 h-10 rounded-full object-cover" unoptimized />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center font-semibold text-white text-lg">
-              {(name || "U").slice(0, 2).toUpperCase()}
+    <>
+      {/* Mobile overlay backdrop */}
+      <div
+        className={`fixed inset-0 bg-black/50 z-40 md:hidden ${isOpen ? "block" : "hidden"}`}
+        onClick={onClose}
+        aria-hidden={!isOpen}
+      />
+      <nav
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-black border-r border-gray-800 flex flex-col h-full transform transition-transform duration-300
+        ${isOpen ? "translate-x-0" : "-translate-x-64"} md:translate-x-0`}
+        aria-label="Sidebar"
+      >
+        <div className="flex items-center justify-center h-20 border-b border-gray-800 relative">
+          <h1 className="text-2xl font-bold text-emerald-400">MediScript</h1>
+          {/* Close button on mobile */}
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute right-3 top-1/2 -translate-y-1/2 md:hidden p-2 rounded hover:bg-gray-800 text-gray-300"
+            aria-label="Close sidebar"
+          >
+            {/* X icon */}
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div className="flex-1 p-4 space-y-2">
+          {navItems.map((item) => {
+            const isActive = pathname.startsWith(item.href);
+            return (
+              <a key={item.name} href={item.href} className={`group flex items-center w-full px-4 py-3 rounded-lg transition-colors duration-200 ${isActive ? "bg-gray-900 text-white" : "text-gray-400 hover:bg-gray-900 hover:text-white"}`}>
+                <span className={`mr-3 transition-colors ${isActive ? "text-emerald-400" : "text-gray-500 group-hover:text-gray-300"}`}>{React.cloneElement(item.icon, { className: "w-5 h-5" })}</span>
+                <span className="font-medium text-sm">{item.name}</span>
+              </a>
+            );
+          })}
+        </div>
+        <div className="p-4 border-t border-gray-800">
+          <a href="/profile" className="flex items-center hover:bg-gray-900 p-2 rounded-lg transition-colors">
+            {avatarUrl ? (
+              <Image src={avatarUrl} alt="Avatar" width={40} height={40} className="w-10 h-10 rounded-full object-cover" unoptimized />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center font-semibold text-white text-lg">
+                {(name || "U").slice(0, 2).toUpperCase()}
+              </div>
+            )}
+            <div className="ml-3">
+              <p className="text-sm font-medium text-white">{name || "—"}</p>
+              <p className="text-xs text-gray-400">{role || "—"}</p>
             </div>
-          )}
-          <div className="ml-3">
-            <p className="text-sm font-medium text-white">{name || "—"}</p>
-            <p className="text-xs text-gray-400">{role || "—"}</p>
-          </div>
-        </a>
-      </div>
-    </nav>
+          </a>
+        </div>
+      </nav>
+    </>
   );
 }
